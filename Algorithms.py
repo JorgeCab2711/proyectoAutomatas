@@ -11,21 +11,24 @@ class NFA:
     def show(self):
         self.start.show()
     # Funcion para obtener todos los estados
+
     def getAllStates(self):
         return list(self.start.getAllStates())
     # Funcion para obtener todos los estados en orden
+
     def getAllStatesInOrder(self):
         return self.start.getAllStatesInOrder()
     # Funcion para obtener todos los simbolos
     # NO USAR ESTA FUNCION mejor obtener los simbolos de la expresion regular
+
     def getAllSymbols(self):
         return list(self.start.getAllSymbols())
     # Funcion para asginar nombre a todos los estados
+
     def setNameToAllStates(self, name=0):
         for state in self.getAllStatesInOrder():
             state.setName(f"q{name}")
             name += 1
-    
 
 
 # Clase que nos ayudara a representar un estado
@@ -52,13 +55,13 @@ class State:
     def setName(self, name):
         self.name = name
 
-    # Clase que nos ayudara a mostrar el NFA 
+    # Clase que nos ayudara a mostrar el NFA
     def show(self, visited=None):
         if visited is None:
             visited = set()
         if self in visited:
             return
-        visited.add(self)   
+        visited.add(self)
         statesNames = []
         clave = ""
         for key in self.transitions:
@@ -93,7 +96,7 @@ class State:
             for state in self.transitions[key]:
                 state.getAllStates(visited)
         return visited
-    
+
     # Funcion para obtener todos los simbolos de la transiciones del estado
     # Parametros:
     # symbol - Simbolo de la transicion
@@ -115,10 +118,12 @@ class State:
             for state in self.transitions[key]:
                 state.getAllSymbols(visited)
         return visited
-       
+
 # simbolo de epsilon = &
 # Algoritmo de Thompson para convertir una expresion regular a un NFA
 # Apoyo https://medium.com/swlh/visualizing-thompsons-construction-algorithm-for-nfas-step-by-step-f92ef378581b
+
+
 def Thompson(Regex):
     NFAstack = []
     for char in Regex:
@@ -137,7 +142,8 @@ def Thompson(Regex):
         elif char == '?':
             nfa2 = NFAstack.pop()
             nfa1 = NFAstack.pop()
-            nfa1.end.transitions = {**nfa1.end.transitions,** nfa2.start.transitions}
+            nfa1.end.transitions = {
+                **nfa1.end.transitions, ** nfa2.start.transitions}
             NFAstack.append(NFA(nfa1.start, nfa2.end))
 
         elif char == '*':
@@ -163,10 +169,12 @@ def Thompson(Regex):
             end = State()
             start = State(transitions={char: [end]})
             NFAstack.append(NFA(start, end))
-            
+
     return NFAstack.pop()
 
 # Funcion para obtener todos los estados alcanzables desde un estado a través de epsilon
+
+
 def epsilonClosure(state):
     if state is None:
         return set()
@@ -178,6 +186,8 @@ def epsilonClosure(state):
     return closure
 
 # Funcion para obtener todos los estados alcanzables desde un conjunto de estados a través de epsilon
+
+
 def epsilonClosureOfSet(states):
     closure = set()
     for state in states:
@@ -185,8 +195,10 @@ def epsilonClosureOfSet(states):
     return closure
 
 # Funcion para obtener los nombres de los estados en string
+
+
 def getFixedName(states):
-    newName =""
+    newName = ""
     numbers = []
     for state in states:
         numbers.append(int(state.name[1:]))
@@ -198,7 +210,9 @@ def getFixedName(states):
     return newName[:-1]
 
 # Funcion para obtener todos los estados alcanzables desde un conjunto de estados a través de un simbolo
-def getTransions(states,symbol):
+
+
+def getTransions(states, symbol):
     transiciones = set()
     for state in states:
         if symbol in state.transitions:
@@ -210,6 +224,8 @@ def getTransions(states,symbol):
 # Parametros:
 #  states - Conjunto de estados
 #  names - Nombres de los estados en lista
+
+
 def getStatesByName(states, names):
     statesByName = set()
     nNames = []
@@ -227,19 +243,19 @@ def getStatesByName(states, names):
 # https://www.youtube.com/watch?v=vt2x0W_jcPU
 # https://www.youtube.com/watch?v=DjH7K7MZRAw&t=1427s
 
-def subsetConstruction(NFA,expression):
+def subsetConstruction(NFA, expression):
     DFA = {}
     start = NFA.start
     newStates = {}
     simbolos = []
     for c in expression:
-        if c not in simbolos and c not in ['|','?','*','+']:
+        if c not in simbolos and c not in ['|', '?', '*', '+']:
             simbolos.append(c)
 
-    DFA = {"Estados":[],}
+    DFA = {"Estados": [], }
     for s in simbolos:
         if s != '&':
-            DFA[s]=[]
+            DFA[s] = []
 
     # epsilon closure del estado inicial
     data = epsilonClosure(start)
@@ -247,26 +263,27 @@ def subsetConstruction(NFA,expression):
     valor = f"S{len(newStates)}"
     newStates[valor] = getFixedName(data)
 
-    DFA['Estados']= [valor]
+    DFA['Estados'] = [valor]
     for STATE in enumerate(DFA['Estados']):
-        ndata = getStatesByName(NFA.getAllStates(),newStates[STATE[1]].split(','))
+        ndata = getStatesByName(
+            NFA.getAllStates(), newStates[STATE[1]].split(','))
         newSet = set()
         for state in ndata:
             newSet = newSet.union(epsilonClosure(state))
         data = ndata
         for s in simbolos:
             if s != '&':
-                transiciones = getTransions(data,s)
-                nData =set()
+                transiciones = getTransions(data, s)
+                nData = set()
                 for state in transiciones:
-                    nData = nData.union(epsilonClosure(state))  
+                    nData = nData.union(epsilonClosure(state))
                 # print("nData",nData)
                 nName = getFixedName(nData)
                 # print(nName)
                 if nName != "":
                     if nName not in newStates.values():
                         valor = f"S{len(newStates)}"
-                    
+
                         newStates[valor] = nName
                         DFA['Estados'].append(valor)
                         DFA[s].append(valor)
@@ -276,5 +293,16 @@ def subsetConstruction(NFA,expression):
                                 DFA[s].append(key)
                 else:
                     DFA[s].append("NONE")
- 
+
     return DFA
+
+
+# TODO Simulacion de AFN
+def simulation():
+    print('Simulation')
+
+
+# TODO MINIMALIZACION
+
+def minimalization():
+    print('Minimization')
