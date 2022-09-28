@@ -2,6 +2,9 @@
 # Atributos:
 #   start - Estado inicial
 #   end - Estado final
+import itertools
+
+
 class NFA:
     def __init__(self, start, end):
         self.start = start
@@ -293,6 +296,13 @@ def subsetConstruction(NFA, expression):
                                 DFA[s].append(key)
                 else:
                     DFA[s].append("NONE")
+    estadosAceptacion = []
+    finalState = NFA.end.name.split('q')[1]
+    for state in DFA['Estados']:
+        if finalState in newStates[state].split(','):
+            estadosAceptacion.append(state)
+
+    DFA['Aceptacion'] = estadosAceptacion
 
     return DFA
 
@@ -302,7 +312,100 @@ def simulation():
     print('Simulation')
 
 
-# TODO MINIMALIZACION
+# Funcion para retornar pares de cadenas de estados
+def state_pairs(table: dict):
+    # subset construction already removed the non reachable states
+    cadenas = []
+    current_state_counter = 0
+    next_state_counter = 0
+    working = True
+    while working:
+        if (next_state_counter == len(table['Estados'])):
+            next_state_counter = 0
+        elif(current_state_counter == len(table["Estados"]) - 1):
+            working = False
+        pair = (
+            table["Estados"][current_state_counter],
+            table["Estados"][next_state_counter]
+        )
+        if (table["Estados"][current_state_counter] != table["Estados"][next_state_counter] and table["Estados"][current_state_counter] != "NONE" and table["Estados"][current_state_counter] != "NONE"):
+            cadenas.append(pair)
+        next_state_counter += 1
 
-def minimalization():
-    print('Minimization')
+        if(next_state_counter == len(table["Estados"])):
+            current_state_counter += 1
+
+    return cadenas
+
+
+def a_pairs(table: dict):
+    # subset construction already removed the non reachable states
+    cadenas = []
+    current_state_counter = 0
+    next_state_counter = 0
+    working = True
+    while working:
+        if (next_state_counter == len(table['a'])):
+            next_state_counter = 0
+        elif(current_state_counter == len(table["a"]) - 1):
+            working = False
+        pair = (
+            table["a"][current_state_counter],
+            table["a"][next_state_counter]
+        )
+        if (table["a"][current_state_counter] != table["a"][next_state_counter]):
+            cadenas.append(pair)
+        next_state_counter += 1
+
+        if(next_state_counter == len(table["a"])):
+            current_state_counter += 1
+    cadenas = list(set(cadenas))
+    return cadenas
+
+
+def b_pairs(table: dict):
+    # subset construction already removed the non reachable states
+    cadenas = []
+    current_state_counter = 0
+    next_state_counter = 0
+    working = True
+    while working:
+        if (next_state_counter == len(table['b'])):
+            next_state_counter = 0
+        elif(current_state_counter == len(table["b"]) - 1):
+            working = False
+        pair = (
+            table["b"][current_state_counter],
+            table["b"][next_state_counter]
+        )
+        if (table["b"][current_state_counter] != table["b"][next_state_counter]):
+            cadenas.append(pair)
+        next_state_counter += 1
+
+        if(next_state_counter == len(table["b"])):
+            current_state_counter += 1
+    # remove all repeated tuples from list
+    cadenas = list(set(cadenas))
+    return cadenas
+
+
+def minimization(state_pairs, table):
+    # Get all pairs that have the acceptance state as a first item
+    first_is_AE = [pairs for pairs in state_pairs
+                   if any(element == pairs[0] for element in table["Aceptacion"]) and any(element != pairs[1] for element in table["Aceptacion"])]
+    # Get all pairs that have the acceptance state as a second item
+    second_is_AE = [pairs for pairs in state_pairs
+                    if any(element != pairs[0] for element in table["Aceptacion"]) and any(element == pairs[1] for element in table["Aceptacion"])]
+
+    # Declare all posible matches on A and B transitions
+    B_combinations = b_pairs(table)
+    A_combinations = a_pairs(table)
+
+    # combine both AE of distinguished chains in to a single list
+    first_is_AE.extend(second_is_AE)
+    # combine both A and B combinations in to a single list
+    B_combinations.extend(A_combinations)
+
+    # Asign new variable names
+    dist_chains = first_is_AE
+    ab_comb = B_combinations
