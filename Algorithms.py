@@ -381,12 +381,33 @@ def b_pairs(table: dict):
         if (table["b"][current_state_counter] != table["b"][next_state_counter]):
             cadenas.append(pair)
         next_state_counter += 1
-
         if(next_state_counter == len(table["b"])):
             current_state_counter += 1
-    # remove all repeated tuples from list
+    # remove all duplicate tuples from list
     cadenas = list(set(cadenas))
     return cadenas
+
+# retruns a list with the state generators of the argumented state
+
+
+def get_generator(table, estado):
+    generator_states_list = []
+    counter = 0
+    aList = list(table["b"])
+    generator_states = []
+    for i in range(len(aList)):
+        state = aList[i]
+        state_generator = "S"+str(counter)
+        generator_states.append((state_generator, state))
+        counter += 1
+    # for i in generator_states:
+    #     print(i)
+
+    for g, s in generator_states:
+        if(estado == s):
+            generator_states_list.append(g)
+
+    return generator_states_list
 
 
 def minimization(state_pairs, table):
@@ -409,3 +430,8 @@ def minimization(state_pairs, table):
     # Asign new variable names
     dist_chains = first_is_AE
     ab_comb = B_combinations
+
+    for comb in ab_comb:
+        for d_c in dist_chains:
+            if comb == d_c:
+                print(comb, d_c)
